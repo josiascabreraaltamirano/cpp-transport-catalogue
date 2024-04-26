@@ -1,10 +1,11 @@
 #pragma once
+//my libraries
+#include "geo.h"
+#include "transport_catalogue.h"
+//std libraries
 #include <string>
 #include <string_view>
 #include <vector>
-
-#include "geo.h"
-#include "transport_catalogue.h"
 
 namespace catalogue {
     namespace input {
@@ -23,10 +24,17 @@ namespace catalogue {
             std::string description;  // Параметры команды
         };
 
+        struct DistanceData {
+            std::string from;
+            std::string to;
+            int distance;
+        };
+        
+
         class InputReader {
         public:
             /**
-             * Парсит строку в структуру CommandDescription и сохраняет результат в commands_
+             * Парсит строку в структуру CommandDescription и сохраняет результат в its container
              */
             void ParseLine(std::string_view line);
 
@@ -38,6 +46,7 @@ namespace catalogue {
         private:
             std::vector<CommandDescription> stop_commands_;
             std::vector<CommandDescription> bus_commands_;
+            std::vector<DistanceData> distance_commands_;
         };
     } //namespace input
 } //namespace catalogue 
