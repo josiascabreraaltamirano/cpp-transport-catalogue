@@ -1,8 +1,10 @@
+//my libraries
+#include "input_reader.h"
+#include "stat_reader.h"
+//std libraries
 #include <iostream>
 #include <string>
 
-#include "input_reader.h"
-#include "stat_reader.h"
 
 using namespace std;
 
