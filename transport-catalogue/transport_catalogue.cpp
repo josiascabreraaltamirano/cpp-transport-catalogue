@@ -9,7 +9,14 @@
 #include <limits> 
  
 namespace catalogue { 
-    namespace database {      
+    namespace database { 
+        namespace detail { 
+            //added in sprint 9 
+
+
+
+
+        }//namespace detail     
         void TransportCatalogue::AddStop(std::string_view stop, geo::Coordinates coordinates) { 
             //add a Stop the its main container 
             stops_.push_back({std::string(stop), std::move(coordinates)}); 
@@ -91,19 +98,15 @@ namespace catalogue {
             Distance length = 0; 
             //save the length based on the given coordinates 
             double geo_length = 0.0; 
-            //calc the length and geo_length and save the result in the given vars
+
             CalcLength(stops.begin(), stops.end(), length, geo_length);
+
             //if the route is not roundtrip, duplicate the length values
             if (!is_roundtrip) {
-                //calc the lengths of the way back of the route
                 CalcLength(stops.rbegin(), stops.rend(), length, geo_length);
-                //no-roundtrip routes hold a vector of stops with only the half of the way
-                //so for knowing all the stops in the route is necessary to go repeat the same 
-                //stop tracking but backwards. Example: {a, b, c} it turns to
-                // a - b - c - b - a
-                //so the total amount of stops is twice the size of the given stops minus one
-                total_stops = total_stops * 2 - 1;
+                total_stops = total_stops * 2 -1;
             }
+ 
             double curvature(static_cast<double>(static_cast<double>(length)/static_cast<double>(geo_length))); 
  
             return RouteStats{total_stops, unique_stops, length, static_cast<double>(curvature)}; 

@@ -21,10 +21,10 @@ int main() {
 
     catalogue::database::TransportCatalogue database;
     svg::MapRenderer renderer(*requests.render_settings);
-    catalogue::output::RequestHandler handler(database, renderer);
+    catalogue::request_handler::RequestHandler handler(database, renderer);
 
     json::input::ApplyBaseRequests(database, requests.base_requests);
-    catalogue::output::PrintStats(handler, requests.stat_requests, std::cout);
+    json::output::PrintStats(handler, requests.stat_requests, std::cout);
     //std::cout << "success"sv << '\n';
     /*
      * Примерная структура программы:

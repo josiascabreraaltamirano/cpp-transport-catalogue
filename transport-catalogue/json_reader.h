@@ -4,6 +4,7 @@
 #include "json.h"
 #include "transport_catalogue.h"
 #include "map_renderer.h"
+#include "request_handler.h"
 
 #include <deque>
 #include <unordered_map>
@@ -105,6 +106,11 @@ namespace json {
             std::shared_ptr<svg::Settings> GetRenderSettings() const;
 
         private:
+            void StandardizeStopData(const Dict& request, std::string stopname);
+            void StandardizeBusData(const Dict& request, std::string busname);
+            static svg::Text::Offset StandardizeOffsetData(const Array& offset);
+            static svg::Color StandardizeColorData(const Node& color_type);
+
             BaseRequests base_requests_;
             StatRequests stat_requests_;
             svg::Settings render_settings_;
@@ -129,5 +135,14 @@ namespace json {
 
         void ApplyBaseRequests(catalogue::database::TransportCatalogue& database,
                                                     std::shared_ptr<BaseRequests> base_requests);
-    } //namespace reader
+
+        
+    } //namespace input
+
+    namespace output {
+        using namespace catalogue;
+        void PrintStats(const request_handler::RequestHandler& handler, 
+                        std::shared_ptr<json::input::StatRequests> stat_requests,
+                        std::ostream& output);
+    } //namespace output
 } // namespace json

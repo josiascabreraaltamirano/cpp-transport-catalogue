@@ -177,14 +177,17 @@ namespace svg {
         };
 
         MapRenderer(const Settings& settings);
-        
-        void RenderMap(std::vector<catalogue::domain::StopPtr> stops, std::vector<catalogue::domain::RoutePtr> routes,
+
+        void RenderMap(std::vector<catalogue::domain::StopPtr> active_stops, 
+                       std::vector<catalogue::domain::RoutePtr>active_routes, 
+                       std::ostream& output) const;
+
+    private:
+        void RenderComponents(const std::vector<catalogue::domain::StopPtr>& stops, 
+                              const std::vector<catalogue::domain::RoutePtr>& routes,
                               ObjectContainer& target, 
                               const SphereProjector& conversor) const;
 
-        const Settings& GetSettings() const;
-
-    private:
         template<typename Container>
         void RenderMapElements(const Container& elements, ObjectContainer& target) const {
             for (const auto& element : elements) {
