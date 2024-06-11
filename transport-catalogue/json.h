@@ -5,6 +5,7 @@
 #include <string>
 #include <variant>
 #include <vector>
+#include <utility>
 
 namespace json {
 
@@ -17,11 +18,19 @@ public:
     using runtime_error::runtime_error;
 };
 
-using Value = std::variant<std::nullptr_t, Array, Dict, bool, int, double, std::string>;
-
-class Node : public Value {
+class Node final
+    : private std::variant<std::nullptr_t, Array, Dict, bool, int, double, std::string> {
 public:
-    
+    using variant::variant;
+    using Value = variant;
+
+    Node() = default;
+
+    Node(Value value) 
+    : variant(std::move(value))
+    {
+    }
+
     bool IsInt() const {
         return std::holds_alternative<int>(*this);
     }
@@ -87,26 +96,29 @@ public:
         return std::get<std::string>(*this);
     }
 
-    bool IsMap() const {
+    bool IsDict() const {
         return std::holds_alternative<Dict>(*this);
     }
-    const Dict& AsMap() const {
+    const Dict& AsDict() const {
         using namespace std::literals;
-        if (!IsMap()) {
-            throw std::logic_error("Not a map"s);
+        if (!IsDict()) {
+            throw std::logic_error("Not a dict"s);
         }
 
         return std::get<Dict>(*this);
+    }
+
+    bool operator==(const Node& rhs) const {
+        return GetValue() == rhs.GetValue();
     }
 
     const Value& GetValue() const {
         return *this;
     }
 
-    bool operator==(const Node& rhs) const {
-        return *this == rhs.GetValue();
+    Value& GetValue() {
+        return *this;
     }
-
 };
 
 inline bool operator!=(const Node& lhs, const Node& rhs) {

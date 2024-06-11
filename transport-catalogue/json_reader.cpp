@@ -1,4 +1,5 @@
 #include "json_reader.h"
+#include "json_builder.h"
 
 #include <cassert>
 #include <sstream>
@@ -10,10 +11,10 @@ namespace json {
         JsonReader& JsonReader::ParseJson(std::istream& input) {
             using namespace std::literals;
             try {
-                auto node_root = Load(input).GetRoot().AsMap();
+                auto node_root = Load(input).GetRoot().AsDict();
                 base_requests_ = std::move(ParseRequest(node_root.at("base_requests"s).AsArray()));
                 stat_requests_ = std::move(ParseRequest(node_root.at("stat_requests"s).AsArray()));
-                render_settings_ = std::move(node_root.at("render_settings"s).AsMap());
+                render_settings_ = std::move(node_root.at("render_settings"s).AsDict());
             } catch (const std::exception& e) {
                 std::cerr << "error while parsing json document : "sv << e.what() << '\n';
             }
@@ -39,7 +40,7 @@ namespace json {
 
             try {
                 for (const auto& r : request) {
-                    container.push_back(std::move(r.AsMap()));
+                    container.push_back(std::move(r.AsDict()));
                 }
             } catch (const std::exception& e) {
                 std::cerr << "error while parsing requests : "sv << e.what() << '\n';
@@ -133,7 +134,7 @@ namespace json {
             auto latitude = request.at("latitude"s).AsDouble();
             auto longitude = request.at("longitude"s).AsDouble();
             //get the map of road distances in nodes
-            auto road_nodes = request.at("road_distances"s).AsMap();
+            auto road_nodes = request.at("road_distances"s).AsDict();
             //declare the var where road distances will be stored after parsing
             std::unordered_map<std::string, domain::Distance> road_distances;
             //reserve memory
@@ -245,48 +246,48 @@ namespace json {
                     throw std::runtime_error("Attemp to use an invalid pointer to access stat_requests"s);
                 }
                 
-                Array root;
-                //especial value to not found request
-                std::pair<std::string, Node> not_found = {"error_message"s, Node{"not found"s}};
-
+                auto root = Builder{};
+                auto root_as_array = root.StartArray();
                 for (const auto& request : *stat_requests) {
-                    Dict request_response;
-                    request_response["request_id"s] = Node{request.id};
+                    auto request_response = root_as_array.StartDict();
+                    request_response.Key("request_id"s).Value(request.id);
                     if (request.type == "Bus"sv) {
                             auto route = handler.GetRouteStats(request.name);
                             if (route.is_route) {
-                                request_response["curvature"s] = Node{static_cast<double>(route.curvature)};
-                                request_response["route_length"s] = Node{static_cast<double>(route.length)};
-                                request_response["unique_stop_count"s] = Node{route.unique_stops};
-                                request_response["stop_count"s] = Node{route.total_stops};
+                                request_response
+                                .Key("curvature"s).Value(static_cast<double>(route.curvature))
+                                .Key("route_length"s).Value(static_cast<double>(route.length))
+                                .Key("unique_stop_count"s).Value(route.unique_stops)
+                                .Key("stop_count"s).Value(route.total_stops);
                             } else {
-                                request_response.insert(not_found);
+                                request_response.Key("error_message"s).Value("not found"s);
                             }
                     } else if (request.type == "Stop"sv) {
                             auto stop = handler.GetStopStats(request.name);
                             if (stop.is_stop) {
-                                Array routes_passing_by;
+                                auto routes_passing_by = request_response.Key("buses"s).StartArray();
                                 if (stop.routes) {
                                     for (const auto& route : *(stop.routes)) {
-                                        routes_passing_by.push_back({route -> name});
+                                        routes_passing_by.Value(route -> name);
                                     }
+                                    
                                 }
-                                request_response["buses"s] = Node{routes_passing_by};
+                                routes_passing_by.EndArray();
 
                             } else {
-                                request_response.insert(not_found);
+                                request_response.Key("error_message"s).Value("not found"s);
                             }
                     } else if (request.type == "Map"sv) {
                         std::ostringstream map_stream;
                         handler.RenderMap(map_stream);
-                        request_response["map"] = Node{map_stream.str()};
+                        request_response.Key("map"s).Value(map_stream.str());
                     } else {
                         throw std::invalid_argument("Unknown type \""s + request.type + "\"."s);
                     }
-                    
-                    root.push_back({request_response});
+                    request_response.EndDict();
                 }
-                json::Print(json::Document{Node{root}}, output);
+                root_as_array.EndArray();
+                json::Print(json::Document{root.Build()}, output);
                 
             } catch (const std::exception& e) {
                 throw std::runtime_error("something went wrong while handling stat requests : "s + e.what());

@@ -30,7 +30,7 @@ Node LoadArray(std::istream& input) {
     if (!input) {
         throw ParsingError("Array parsing error"s);
     }
-    return Node{std::move(result)};
+    return Node(std::move(result));
 }
 
 Node LoadDict(std::istream& input) {
@@ -54,7 +54,7 @@ Node LoadDict(std::istream& input) {
     if (!input) {
         throw ParsingError("Dictionary parsing error"s);
     }
-    return Node{std::move(dict)};
+    return Node(std::move(dict));
 }
 
 Node LoadString(std::istream& input) {
@@ -102,7 +102,7 @@ Node LoadString(std::istream& input) {
         ++it;
     }
 
-    return Node{std::move(s)};
+    return Node(std::move(s));
 }
 
 Node LoadBool(std::istream& input) {
@@ -178,13 +178,13 @@ Node LoadNumber(std::istream& input) {
         if (is_int) {
             // Сначала пробуем преобразовать строку в int
             try {
-                return {std::stoi(parsed_num)};
+                return std::stoi(parsed_num);
             } catch (...) {
                 // В случае неудачи, например, при переполнении
                 // код ниже попробует преобразовать строку в double
             }
         }
-        return {std::stod(parsed_num)};
+        return std::stod(parsed_num);
     } catch (...) {
         throw ParsingError("Failed to convert "s + parsed_num + " to number"s);
     }
