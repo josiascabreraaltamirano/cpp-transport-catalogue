@@ -83,37 +83,71 @@ namespace svg {
     };
 
     struct Settings {
-        Settings() = default;
-        Settings(double width, double height,
-                 double padding, double line_width,
-                 double stop_radius, int bus_label_font_size,
-                 Text::Offset bus_label_offset, int stop_label_font_size,
-                 Text::Offset stop_label_offset, Color underlayer_color, 
-                 double underlayer_width, std::vector<Color> color_palette)
-        : width(width)
-        , height(height)
-        , padding(padding)
-        , line_width(line_width)
-        , stop_radius(stop_radius)
-        , bus_label_font_size(bus_label_font_size)
-        , bus_label_offset(bus_label_offset)
-        , stop_label_font_size(stop_label_font_size)
-        , stop_label_offset(stop_label_offset)
-        , underlayer_color(underlayer_color)
-        , underlayer_width(underlayer_width)
-        , color_palette(std::move(color_palette))
-        {
-        }
-        
-    
-        double width, height, padding, line_width, stop_radius;
-        int bus_label_font_size;
-        Text::Offset bus_label_offset; 
-        int stop_label_font_size;
-        Text::Offset stop_label_offset;
+        double width, height, padding, line_width, stop_radius, underlayer_width;
+        int bus_label_font_size, stop_label_font_size;
+        Text::Offset bus_label_offset, stop_label_offset;
         Color underlayer_color;
-        double underlayer_width;
         std::vector<Color> color_palette;
+
+        Settings& SetWidth(double value) {
+            width = value;
+            return *this;
+        }
+
+        Settings& SetHeight(double value) {
+            height = value;
+            return *this;
+        }
+
+        Settings& SetPadding(double value) {
+            padding = value;
+            return *this;
+        }
+
+        Settings& SetLineWidth(double value) {
+            line_width = value;
+            return *this;
+        }
+
+        Settings& SetStopRadius(double value) {
+            stop_radius = value;
+            return *this;
+        }
+
+        Settings& SetUnderlayerWidth(double value) {
+            underlayer_width = value;
+            return *this;
+        }
+
+        Settings& SetBusLabelFontSize(int size) {
+            bus_label_font_size = size;
+            return *this;
+        }
+
+        Settings& SetStopLabelFontSize(int size) {
+            stop_label_font_size = size;
+            return *this;
+        }
+
+        Settings& SetBusLabelOffset(Text::Offset value) {
+            bus_label_offset = std::move(value);
+            return *this;
+        }
+
+        Settings& SetStopLabelOffset(Text::Offset value) {
+            stop_label_offset = std::move(value);
+            return *this;
+        }
+
+        Settings& SetUnderlayerColor(Color color) {
+            underlayer_color = std::move(color);
+            return *this;
+        }
+
+        Settings& SetColorPalette(std::vector<Color> colors) {
+            color_palette = std::move(colors);
+            return *this;
+        }
     };
 
     class MapRenderer final {

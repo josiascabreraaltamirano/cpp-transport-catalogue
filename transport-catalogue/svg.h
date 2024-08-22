@@ -259,15 +259,17 @@ namespace svg {
     class Text final : public Object, public PathProps<Text> {
     public:
         struct Offset {
-            Offset() = default;
-            
-            Offset(double x, double y) 
-            : dx(x)
-            , dy(y)
-            {
+            double dx, dy;
+
+            Offset& SetDx(double value) {
+                dx = value;
+                return *this;
             }
 
-            double dx, dy;
+            Offset& SetDy(double value) {
+                dy = value;
+                return *this;
+            }
         };
         
         // Задаёт координаты опорной точки (атрибуты x и y)

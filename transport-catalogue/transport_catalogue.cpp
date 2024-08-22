@@ -11,12 +11,8 @@
 namespace catalogue { 
     namespace database { 
         namespace detail { 
-            //added in sprint 9 
-
-
-
-
         }//namespace detail     
+        
         void TransportCatalogue::AddStop(std::string_view stop, geo::Coordinates coordinates) { 
             //add a Stop the its main container 
             stops_.push_back({std::string(stop), std::move(coordinates)}); 
@@ -73,7 +69,7 @@ namespace catalogue {
  
             auto inverse_distance = stops_to_distance_.find({destination, origin}); 
             return inverse_distance != end ? inverse_distance -> second : 
-            throw std::out_of_range(std::string("The required data does not exist in the database")); 
+            throw std::out_of_range(std::string("The required data does not exist in the database : ") + std::string(from) + " -> " + std::string(to)); 
         } 
 
         StopStats TransportCatalogue::GetStopStats(std::string_view stop) const { 

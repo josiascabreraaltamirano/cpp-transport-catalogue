@@ -17,7 +17,7 @@ int main() {
     //std::ifstream json_input("input.json"s);
     //std::ofstream json_output("output.json"s);
     auto requests = json::input::ParseInput(std::cin);
-    assert(requests.base_requests && requests.render_settings && requests.stat_requests);
+    assert(requests.base_requests && requests.render_settings && requests.stat_requests && requests.routing_settings);
 
     catalogue::database::TransportCatalogue database;
     svg::MapRenderer renderer(*requests.render_settings);
@@ -26,14 +26,7 @@ int main() {
     json::input::ApplyBaseRequests(database, requests.base_requests);
     json::output::PrintStats(handler, requests.stat_requests, std::cout);
     //std::cout << "success"sv << '\n';
-    /*
-     * Примерная структура программы:
-     *
-     * Считать JSON из stdin
-     * Построить на его основе JSON базу данных транспортного справочника
-     * Выполнить запросы к справочнику, находящиеся в массива "stat_requests", построив JSON-массив
-     * с ответами Вывести в stdout ответы в виде JSON
-     */
+
     return 0;
 }
 

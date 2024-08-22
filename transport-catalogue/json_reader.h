@@ -12,9 +12,10 @@
 #include <iostream>
 
 namespace json {
-    namespace input {
-        using namespace catalogue;
+    using namespace catalogue;
+    using namespace domain;
 
+    namespace input {
         class JsonReader {
         public:
             JsonReader() = default;
@@ -22,119 +23,60 @@ namespace json {
             const std::vector<Dict>& GetBaseRequests() const;
             const std::vector<Dict>& GetStatRequests() const;
             const Dict& GetRenderSettings() const;
+            const Dict& GetRoutingSettings() const;
             
         private:
             std::vector<Dict> ParseRequest(Array request);
+
             std::vector<Dict> base_requests_;
             std::vector<Dict> stat_requests_;
             Dict render_settings_;
+            Dict routing_settings_;
         };
-
-        struct BaseRequests {
-            struct StopData {
-                StopData(std::string name, 
-                double lat, 
-                double lon)
-                : name(std::move(name))
-                , latitude(lat)
-                , longitude(lon)
-                {
-                }
-
-                std::string name;
-                double latitude;
-                double longitude;
-            };
-
-            struct BusData {
-                BusData(std::string name, 
-                std::vector<std::string> stops,
-                bool is_roundtrip) 
-                : name(std::move(name))
-                , stops(std::move(stops))
-                , is_roundtrip(is_roundtrip)
-                {
-                }
-
-                std::string name;
-                std::vector<std::string> stops;
-                bool is_roundtrip;
-            };
-            
-            struct DistanceData {
-                DistanceData(const std::string& from, 
-                std::unordered_map<std::string, domain::Distance> distances) 
-                : from(from)
-                , road_distances(std::move(distances))
-                {
-                }
-
-                std::string from;
-                std::unordered_map<std::string, domain::Distance> road_distances;
-            };
-            
-            std::deque<StopData> stops;
-            std::deque<BusData> buses;
-            std::deque<DistanceData> distances;
-        };
-        
-        struct StatRequest {
-            StatRequest(int id, 
-                        std::string type,
-                        std::string name) 
-            : id(id)
-            , type(std::move(type))
-            , name(std::move(name))
-            {
-            }
-
-            int id;
-            std::string type;
-            std::string name;
-        };
-
-        using StatRequests = std::vector<StatRequest>;
-        
+ 
         class InputStandardizer {
         public:
-            InputStandardizer() = default;
-            void StandardizeBaseRequests(const std::vector<Dict>& base_requests);
-            void StandardizeStatRequests(const std::vector<Dict>& stat_requests);
-            void StandardizeRenderSettings(const Dict& render_settings);
-            std::shared_ptr<BaseRequests> GetBaseRequests() const;
-            std::shared_ptr<StatRequests> GetStatRequests() const;
-            std::shared_ptr<svg::Settings> GetRenderSettings() const;
+            static BaseRequests StandardizeBaseRequests(const std::vector<Dict>& base_requests);
+            static StatRequests StandardizeStatRequests(const std::vector<Dict>& stat_requests);
+            static svg::Settings StandardizeRenderSettings(const Dict& render_settings);
+            static RouterSettings StandardizeRoutingSettings(const Dict& routing_settings);
 
         private:
-            void StandardizeStopData(const Dict& request, std::string stopname);
-            void StandardizeBusData(const Dict& request, std::string busname);
             static svg::Text::Offset StandardizeOffsetData(const Array& offset);
             static svg::Color StandardizeColorData(const Node& color_type);
-
-            BaseRequests base_requests_;
-            StatRequests stat_requests_;
-            svg::Settings render_settings_;
         };
 
         struct Requests {
-            Requests(std::shared_ptr<BaseRequests> base, 
-                     std::shared_ptr<StatRequests> stat,
-                     std::shared_ptr<svg::Settings> settings) 
-            : base_requests(base)
-            , stat_requests(stat)
-            , render_settings(settings)
-            {
+            BaseRequests base_requests;
+            StatRequests stat_requests;
+            svg::Settings render_settings;
+            RouterSettings router_settings;
+
+            Requests& SetBaseRequests(BaseRequests&& requests) {
+                base_requests = std::move(requests);
+                return *this;
             }
 
-            std::shared_ptr<BaseRequests> base_requests;
-            std::shared_ptr<StatRequests> stat_requests;
-            std::shared_ptr<svg::Settings> render_settings;
+            Requests& SetStatRequests(StatRequests&& requests) {
+                stat_requests = std::move(requests);
+                return *this;
+            }
+
+            Requests& SetRenderSettings(svg::Settings&& settings) {
+                render_settings = std::move(settings);
+                return *this;
+            }
+
+            Requests& SetRouterSettings(RouterSettings&& settings) {
+                router_settings = std::move(settings);
+                return *this;
+            }
         };
         
         Requests ParseInput(std::istream& input);
 
         void ApplyBaseRequests(catalogue::database::TransportCatalogue& database,
-                                                    std::shared_ptr<BaseRequests> base_requests);
+                                                    const BaseRequests& base_requests);
 
         
     } //namespace input
@@ -142,7 +84,7 @@ namespace json {
     namespace output {
         using namespace catalogue;
         void PrintStats(const request_handler::RequestHandler& handler, 
-                        std::shared_ptr<json::input::StatRequests> stat_requests,
+                        const StatRequests& stat_requests,
                         std::ostream& output);
     } //namespace output
 } // namespace json

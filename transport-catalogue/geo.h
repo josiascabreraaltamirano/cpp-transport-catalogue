@@ -1,6 +1,6 @@
 #pragma once
 
-#include "svg.h"
+//#include "svg.h"
 //std library
 #include <cmath>
 #include <algorithm>
