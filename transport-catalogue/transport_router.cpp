@@ -5,35 +5,10 @@
 namespace catalogue {
     namespace router {
 
-        // TransportRouterConstructor public member functions definition
-
-        TransportRouterConstructor& TransportRouterConstructor::SetDataSource(const Database& source) {
-            database_ = &source;
-            return *this;
-        }
-
-        TransportRouterConstructor& TransportRouterConstructor::SetRouterSettings(const domain::RouterSettings& settings) {
-            velocity_ = settings.bus_velocity * METERS_PER_KILOMETER / MINUTES_PER_HOUR;
-            wait_time_ = settings.bus_wait_time;
-            return *this;
-        }
-
-        const Database& TransportRouterConstructor::GetDatabase() const {
-            return *database_;
-        }
-
-        double TransportRouterConstructor::GetVelocity() const {
-            return velocity_;
-        }
-
-        int TransportRouterConstructor::GetWaitTime() const {
-            return wait_time_;
-        }
-
         // TransportRouter public member functions definition
 
-        TransportRouter::TransportRouter(TransportRouterConstructor data)
-        : graph_(TransportRouter::TransportGraphFactory{data}.MakeTransportGraph())
+        TransportRouter::TransportRouter(const Database& source, const domain::RouterSettings& settings)
+        : graph_(TransportRouter::TransportGraphFactory{source, settings}.MakeTransportGraph())
         , router_(graph_) 
         {
         }

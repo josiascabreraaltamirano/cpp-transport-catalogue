@@ -17,16 +17,16 @@ int main() {
     //std::ifstream json_input("input.json"s);
     //std::ofstream json_output("output.json"s);
     auto requests = json::input::ParseInput(std::cin);
-    assert(requests.base_requests && requests.render_settings && requests.stat_requests && requests.routing_settings);
-
+    
     catalogue::database::TransportCatalogue database;
-    svg::MapRenderer renderer(*requests.render_settings);
-    catalogue::request_handler::RequestHandler handler(database, renderer);
 
     json::input::ApplyBaseRequests(database, requests.base_requests);
+
+    catalogue::router::TransportRouter router(database, requests.router_settings);
+    svg::MapRenderer renderer(requests.render_settings);
+    catalogue::request_handler::RequestHandler handler(database, router, renderer);
+    
     json::output::PrintStats(handler, requests.stat_requests, std::cout);
-    //std::cout << "success"sv << '\n';
 
     return 0;
 }
-

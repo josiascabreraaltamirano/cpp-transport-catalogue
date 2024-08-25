@@ -16,25 +16,6 @@ namespace catalogue {
 
         using Database = database::TransportCatalogue;
 
-        class TransportRouterConstructor {
-        public:
-            TransportRouterConstructor& SetDataSource(const Database& source);
-            TransportRouterConstructor& SetRouterSettings(const domain::RouterSettings& settings);
-            const Database& GetDatabase() const;
-            double GetVelocity() const;
-            int GetWaitTime() const;
-
-        private:
-            static const int MINUTES_PER_HOUR = 60;
-            static const int METERS_PER_KILOMETER = 1000;
-
-            const Database* database_;
-            //The velocity is saved in KM per minute
-            double velocity_;
-            //The wait_time is saved in minutes
-            int wait_time_;
-        };
-
         class TransportRouter {
         private:
             using Time = double;
@@ -48,7 +29,7 @@ namespace catalogue {
                 std::vector<Graph::EdgeSegmentInfo> items;
             };
 
-            TransportRouter(TransportRouterConstructor data);
+            TransportRouter(const Database& source, const domain::RouterSettings& settings);
             std::optional<RoutePlan> BuildRoute(std::string_view from, std::string_view to) const;
 
         private:
@@ -56,13 +37,22 @@ namespace catalogue {
 
             class TransportGraphFactory {
             public:
-                TransportGraphFactory(const TransportRouterConstructor& data)
-                : velocity_(data.GetVelocity())
-                , wait_time_(data.GetWaitTime())
-                , database_(data.GetDatabase())
+                TransportGraphFactory(const Database& source, const domain::RouterSettings& settings)
+                : database_(source)
+                , settings_(settings)
                 {  
                 }
 
+                /*
+                Я решил оставить эту строку без изменений, 
+                поскольку считаю, что этот класс должен работать 
+                как конструктор Graph и изолировать эту функциональность 
+                от остального кода. Таким образом, если функция возвращает 
+                Graph, я могу присвоить его непосредственно полю класса 
+                Transport Router. Пожалуйста, позвольте мне оставить это как есть. 
+                В любом случае, если вы сочтете, что есть лучший подход, 
+                дайте мне знать, и я изменю его.
+                */
                 Graph MakeTransportGraph() {
                     Graph graph(database_.GetActiveStops());
                     MakeBusesEdges(graph);
@@ -89,7 +79,7 @@ namespace catalogue {
                         assert(from_portal);
 
                         auto from_hub = *from_portal + 1;
-                        graph.SetEdgePath(graph.AddEdge({*from_portal, from_hub, double(wait_time_)}),
+                        graph.SetEdgePath(graph.AddEdge({*from_portal, from_hub, double(settings_.bus_wait_time)}),
                                         {routedata.busname, span_count});
 
                         auto prev_vertex = from_iter;
@@ -101,9 +91,12 @@ namespace catalogue {
                             auto to_portal = graph.GetVertexId(to_vertex_name);
                             assert(to_portal);
 
-                            graph.SetEdgePath(graph.AddEdge({from_hub, *to_portal, 
-                                                            accumulated_weight += 
-                                                            (database_.GetDistance((*prev_vertex) -> name, to_vertex_name) / velocity_)}),
+                            static const int METERS_PER_KILOMETER = 1000;
+                            static const int MINUTES_PER_HOUR = 60;
+                            
+                            graph.SetEdgePath(graph.AddEdge({from_hub, *to_portal, accumulated_weight += 
+                                                            (database_.GetDistance((*prev_vertex) -> name, to_vertex_name) / 
+                                                            (settings_.bus_velocity * METERS_PER_KILOMETER / MINUTES_PER_HOUR))}),
                                                             {routedata.busname, ++span_count});
                                                             
                             prev_vertex = to_iter;       
@@ -126,9 +119,9 @@ namespace catalogue {
                 }
 
             private:
-                const double velocity_;
-                const int wait_time_;
                 const Database& database_;
+                const domain::RouterSettings& settings_;
+                
             };
 
         private:
